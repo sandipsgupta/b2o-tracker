@@ -104,7 +104,7 @@ export default function Dashboard() {
                 }}
                 isLoading={logAttendance.isPending || deleteAttendance.isPending}
               />
-              <p className="text-xs text-muted-foreground mt-3">💡 You can edit today and past dates. Future dates are locked to prevent errors.</p>
+              <p className="text-xs text-muted-foreground mt-3">💡 You can edit today and future dates in the current month to plan ahead. Mark days as Planned or Holiday to forecast your attendance.</p>
             </CardContent>
           </Card>
 
