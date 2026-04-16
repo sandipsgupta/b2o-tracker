@@ -95,10 +95,11 @@
 
 
 ## Phase 10: Debug Attendance Count Inconsistencies
-- [ ] Calendar shows 8 office days but "This Month" card shows 4 days
-- [ ] Identify which records are being counted vs skipped
-- [ ] Fix backend endpoint returning different counts
-- [ ] Verify "Days remaining" calculation (should be 8, not 4)
-- [ ] Ensure all endpoints use same attendance counting logic
-- [ ] Add debug logging to trace record fetching
-- [ ] Test with actual user data to verify fix
+- [x] Calendar shows 8 office days but "This Month" card shows 4 days
+- [x] Identify which records are being counted vs skipped
+- [x] Fix backend endpoint returning different counts
+- [x] Verify "Days remaining" calculation (should be 8, not 4)
+- [x] Ensure all endpoints use same attendance counting logic
+- [x] Add debug logging to trace record fetching
+- [x] Fix critical bug: upsertAttendanceRecord creating duplicates instead of updating
+- [x] Test with actual user data to verify fix
