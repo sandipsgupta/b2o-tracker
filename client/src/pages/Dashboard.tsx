@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { getTodayLocalDateString, localDateToString } from "@/lib/timezone";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -19,15 +20,14 @@ export default function Dashboard() {
   const monthlyStats = trpc.attendance.getMonthlyStats.useQuery();
   const trendData = trpc.attendance.getTrendData.useQuery({ weeks: 12 });
   
-  // Fetch entire current month's records (not just through today)
-  // This ensures the calendar has all data for the current month
+  // Fetch entire current month's records using local timezone
   const currentDate = new Date();
   const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   
   const attendanceRecords = trpc.attendance.getRecords.useQuery({
-    startDate: monthStart.toISOString().split("T")[0],
-    endDate: monthEnd.toISOString().split("T")[0],
+    startDate: localDateToString(monthStart),
+    endDate: localDateToString(monthEnd),
   });
 
   const logAttendance = trpc.attendance.logAttendance.useMutation({
@@ -57,6 +57,7 @@ export default function Dashboard() {
   });
 
   const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
+  const today = getTodayLocalDateString();
 
   if (isLoading) {
     return (
@@ -72,7 +73,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Attendance Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Track and plan your office attendance</p>
+          <p className="text-muted-foreground mt-1">Track and plan your office attendance • Today: {today}</p>
         </div>
         <Button onClick={() => navigate("/settings")} variant="outline">
           Settings
@@ -103,6 +104,7 @@ export default function Dashboard() {
                 }}
                 isLoading={logAttendance.isPending || deleteAttendance.isPending}
               />
+              <p className="text-xs text-muted-foreground mt-3">💡 You can edit today and past dates. Future dates are locked to prevent errors.</p>
             </CardContent>
           </Card>
 

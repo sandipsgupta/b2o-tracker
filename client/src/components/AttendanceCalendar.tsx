@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getTodayLocalDateString, isFutureDate } from "@/lib/timezone";
 
 interface AttendanceRecord {
   date: string;
@@ -132,10 +133,12 @@ export default function AttendanceCalendar({
       <div className="grid grid-cols-7 gap-2">
         {calendarDays.map((day, idx) => {
           const status = getRecordStatus(day.dateStr);
-          const isToday = day.dateStr === new Date().toISOString().split("T")[0];
+          const today = getTodayLocalDateString();
+          const isToday = day.dateStr === today;
           const isSelected = day.dateStr === selectedDate;
-          // Allow editing all dates in the current month (past and future)
-          const isEditable = day.isCurrentMonth;
+          // Only allow editing today and past dates (not future dates)
+          const isFuture = isFutureDate(day.dateStr);
+          const isEditable = day.isCurrentMonth && !isFuture;
 
           return (
             <button
