@@ -125,15 +125,17 @@ export default function AttendanceCalendar({
           const status = getRecordStatus(day.dateStr);
           const isToday = day.dateStr === new Date().toISOString().split("T")[0];
           const isSelected = day.dateStr === selectedDate;
+          // Allow editing all dates in the current month (past and future)
+          const isEditable = day.isCurrentMonth;
 
           return (
             <button
               key={idx}
-              onClick={() => handleDateClick(day.dateStr)}
-              disabled={isLoading || !day.isCurrentMonth}
+              onClick={() => isEditable && handleDateClick(day.dateStr)}
+              disabled={isLoading || !isEditable}
               className={cn(
                 "aspect-square p-2 rounded-lg border-2 transition-all text-sm font-medium",
-                day.isCurrentMonth ? "cursor-pointer hover:shadow-md" : "opacity-30 cursor-default",
+                isEditable ? "cursor-pointer hover:shadow-md" : "opacity-30 cursor-default",
                 isToday && "ring-2 ring-primary ring-offset-2",
                 isSelected && "ring-2 ring-primary",
                 getStatusColor(status),
@@ -142,7 +144,11 @@ export default function AttendanceCalendar({
             >
               <div className="flex flex-col items-center justify-center h-full">
                 <span>{day.date}</span>
-                {status && <span className="text-xs mt-1">{status === "office" ? "🏢" : status === "wfh" ? "🏠" : "📅"}</span>}
+                {status && (
+                  <span className="text-xs mt-1">
+                    {status === "office" ? "🏢" : status === "wfh" ? "🏠" : "📅"}
+                  </span>
+                )}
               </div>
             </button>
           );
