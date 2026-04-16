@@ -4,14 +4,43 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { useAuth } from "./_core/hooks/useAuth";
+import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
+import SharedDashboard from "./pages/SharedDashboard";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null; // Let the auth check complete
+  }
+
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
+      {/* Public routes */}
+      <Route path="/" component={Home} />
+      <Route path="/share/:token" component={SharedDashboard} />
+      
+      {/* Protected routes */}
+      {isAuthenticated && (
+        <>
+          <Route path="/dashboard">
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          </Route>
+          <Route path="/settings">
+            <DashboardLayout>
+              <Settings />
+            </DashboardLayout>
+          </Route>
+        </>
+      )}
+      
+      <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

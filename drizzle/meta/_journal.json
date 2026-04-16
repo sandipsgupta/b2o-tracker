@@ -1,5 +1,27 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776307684548,
+      "tag": "0000_gigantic_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776307872235,
+      "tag": "0001_rainy_cassandra_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776308221501,
+      "tag": "0002_rainy_talisman",
+      "breakpoints": true
+    }
+  ]
 }
