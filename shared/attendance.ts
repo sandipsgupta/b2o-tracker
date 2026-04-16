@@ -1,14 +1,18 @@
 /**
  * Shared attendance calculation utilities
+ * CRITICAL: All date operations use local timezone (NOT UTC) to match user input
  */
 
 /**
- * Get day of week (1 = Monday, 7 = Sunday)
+ * Parse a date string (YYYY-MM-DD) as a local date
+ * Returns day of week: 1 = Monday, 7 = Sunday
  */
 export function getDayOfWeek(dateStr: string): number {
-  const date = new Date(dateStr + 'T00:00:00Z');
-  const day = date.getUTCDay();
-  return day === 0 ? 7 : day; // Convert Sunday (0) to 7
+  const [year, month, day] = dateStr.split('-').map(Number);
+  // Create date in local timezone (NOT UTC)
+  const date = new Date(year, month - 1, day);
+  const dayOfWeek = date.getDay();
+  return dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday (0) to 7
 }
 
 /**
@@ -23,6 +27,7 @@ export function isWorkingDay(dateStr: string, workingDays: string): boolean {
 
 /**
  * Calculate attendance statistics for a date range
+ * CRITICAL: Uses local timezone for all date calculations
  */
 export interface AttendanceStats {
   totalWorkingDays: number;
@@ -40,21 +45,30 @@ export function calculateAttendanceStats(
   workingDays: string,
   targetPercentage: number
 ): AttendanceStats {
-  // Get all dates in range
-  const allDates: string[] = [];
-  const current = new Date(dateRange.start + 'T00:00:00Z');
-  const end = new Date(dateRange.end + 'T00:00:00Z');
+  // Parse start and end dates as local dates (NOT UTC)
+  const [startYear, startMonth, startDay] = dateRange.start.split('-').map(Number);
+  const [endYear, endMonth, endDay] = dateRange.end.split('-').map(Number);
+  
+  const startDate = new Date(startYear, startMonth - 1, startDay);
+  const endDate = new Date(endYear, endMonth - 1, endDay);
 
-  while (current <= end) {
-    const dateStr = current.toISOString().split('T')[0];
+  // Generate all dates in range (local timezone)
+  const allDates: string[] = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    const year = current.getFullYear();
+    const month = String(current.getMonth() + 1).padStart(2, '0');
+    const day = String(current.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     allDates.push(dateStr);
-    current.setUTCDate(current.getUTCDate() + 1);
+    current.setDate(current.getDate() + 1);
   }
 
   // Filter to working days only
   const workingDaysInRange = allDates.filter(d => isWorkingDay(d, workingDays));
 
-  // Count attendance
+  // Count attendance by status
   const recordMap = new Map(records.map(r => [r.date, r.status]));
   const officeAttendedDays = workingDaysInRange.filter(d => recordMap.get(d) === 'office').length;
   const wfhDays = workingDaysInRange.filter(d => recordMap.get(d) === 'wfh').length;
@@ -63,7 +77,7 @@ export function calculateAttendanceStats(
   const totalWorkingDays = workingDaysInRange.length;
   const attendancePercentage = totalWorkingDays > 0 ? Math.round((officeAttendedDays / totalWorkingDays) * 100) : 0;
 
-  // Calculate remaining days needed
+  // Calculate remaining days needed to reach target
   const targetDays = Math.ceil((targetPercentage / 100) * totalWorkingDays);
   const remainingDaysNeeded = Math.max(0, targetDays - officeAttendedDays);
 
@@ -80,56 +94,60 @@ export function calculateAttendanceStats(
 
 /**
  * Get date range for current week (Monday to Sunday)
+ * Uses local timezone
  */
 export function getCurrentWeekRange(): { start: string; end: string } {
   const now = new Date();
-  const dayOfWeek = now.getUTCDay();
+  const dayOfWeek = now.getDay();
   const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
   const monday = new Date(now);
-  monday.setUTCDate(monday.getUTCDate() - daysToMonday);
+  monday.setDate(monday.getDate() - daysToMonday);
 
   const sunday = new Date(monday);
-  sunday.setUTCDate(sunday.getUTCDate() + 6);
+  sunday.setDate(sunday.getDate() + 6);
 
   return {
-    start: monday.toISOString().split('T')[0],
-    end: sunday.toISOString().split('T')[0],
+    start: formatDateToString(monday),
+    end: formatDateToString(sunday),
   };
 }
 
 /**
  * Get date range for current month
+ * Uses local timezone
  */
 export function getCurrentMonthRange(): { start: string; end: string } {
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
+  const year = now.getFullYear();
+  const month = now.getMonth();
 
-  const start = new Date(Date.UTC(year, month, 1));
-  const end = new Date(Date.UTC(year, month + 1, 0));
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
 
   return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
+    start: formatDateToString(start),
+    end: formatDateToString(end),
   };
 }
 
 /**
  * Get date range for a specific month
+ * month is 1-indexed (1 = January, 12 = December)
  */
 export function getMonthRange(year: number, month: number): { start: string; end: string } {
-  const start = new Date(Date.UTC(year, month - 1, 1));
-  const end = new Date(Date.UTC(year, month, 0));
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0);
 
   return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
+    start: formatDateToString(start),
+    end: formatDateToString(end),
   };
 }
 
 /**
  * Get last N weeks of data for trend analysis
+ * Uses local timezone
  */
 export function getLastNWeeksRanges(n: number): Array<{ start: string; end: string; week: number }> {
   const ranges = [];
@@ -137,21 +155,31 @@ export function getLastNWeeksRanges(n: number): Array<{ start: string; end: stri
 
   for (let i = n - 1; i >= 0; i--) {
     const weekStart = new Date(now);
-    weekStart.setUTCDate(weekStart.getUTCDate() - (7 * i));
+    weekStart.setDate(weekStart.getDate() - (7 * i));
 
-    const dayOfWeek = weekStart.getUTCDay();
+    const dayOfWeek = weekStart.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    weekStart.setUTCDate(weekStart.getUTCDate() - daysToMonday);
+    weekStart.setDate(weekStart.getDate() - daysToMonday);
 
     const weekEnd = new Date(weekStart);
-    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+    weekEnd.setDate(weekEnd.getDate() + 6);
 
     ranges.push({
-      start: weekStart.toISOString().split('T')[0],
-      end: weekEnd.toISOString().split('T')[0],
+      start: formatDateToString(weekStart),
+      end: formatDateToString(weekEnd),
       week: n - i,
     });
   }
 
   return ranges;
+}
+
+/**
+ * Format a Date object to YYYY-MM-DD string (local timezone)
+ */
+export function formatDateToString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
