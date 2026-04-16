@@ -43,6 +43,19 @@ export default function Dashboard() {
     },
   });
 
+  const deleteAttendance = trpc.attendance.deleteAttendance.useMutation({
+    onSuccess: () => {
+      // Refetch all stats after deleting attendance
+      weeklyStats.refetch();
+      monthlyStats.refetch();
+      trendData.refetch();
+      attendanceRecords.refetch();
+    },
+    onError: (error) => {
+      console.error("Failed to delete attendance:", error);
+    },
+  });
+
   const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
 
   if (isLoading) {
@@ -85,7 +98,10 @@ export default function Dashboard() {
                 onDateSelect={(date, status) => {
                   logAttendance.mutate({ date, status });
                 }}
-                isLoading={logAttendance.isPending}
+                onDateDelete={(date) => {
+                  deleteAttendance.mutate({ date });
+                }}
+                isLoading={logAttendance.isPending || deleteAttendance.isPending}
               />
             </CardContent>
           </Card>

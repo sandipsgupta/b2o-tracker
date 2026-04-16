@@ -11,6 +11,7 @@ interface AttendanceRecord {
 interface AttendanceCalendarProps {
   records: AttendanceRecord[];
   onDateSelect: (date: string, status: "office" | "wfh" | "planned") => void;
+  onDateDelete?: (date: string) => void;
   isLoading?: boolean;
 }
 
@@ -19,6 +20,7 @@ const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export default function AttendanceCalendar({
   records,
   onDateSelect,
+  onDateDelete,
   isLoading,
 }: AttendanceCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -76,6 +78,13 @@ export default function AttendanceCalendar({
   const handleStatusSelect = (status: "office" | "wfh" | "planned") => {
     if (selectedDate) {
       onDateSelect(selectedDate, status);
+      setShowStatusMenu(false);
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (selectedDate && onDateDelete) {
+      onDateDelete(selectedDate);
       setShowStatusMenu(false);
     }
   };
@@ -159,7 +168,7 @@ export default function AttendanceCalendar({
       {showStatusMenu && selectedDate && (
         <div className="p-4 bg-card border rounded-lg space-y-3">
           <p className="text-sm font-medium">Select status for {selectedDate}:</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant={getRecordStatus(selectedDate) === "office" ? "default" : "outline"}
@@ -184,6 +193,16 @@ export default function AttendanceCalendar({
             >
               Planned
             </Button>
+            {getRecordStatus(selectedDate) && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleDeleteRecord}
+                disabled={isLoading}
+              >
+                Clear
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
