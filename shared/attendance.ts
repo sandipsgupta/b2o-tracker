@@ -71,18 +71,28 @@ export function calculateAttendanceStats(
   // Filter to working days only
   const workingDaysInRange = allDates.filter(d => isWorkingDay(d, workingDays));
 
+  // Deduplicate records - keep only the last one per date (assuming records are sorted)
+  const recordMap = new Map();
+  for (const record of records) {
+    recordMap.set(record.date, record);
+  }
+
   // Count attendance by status
-  const recordMap = new Map(records.map(r => [r.date, r.status]));
-  const officeAttendedDays = workingDaysInRange.filter(d => recordMap.get(d) === 'office').length;
-  const wfhDays = workingDaysInRange.filter(d => recordMap.get(d) === 'wfh').length;
-  const plannedDays = workingDaysInRange.filter(d => recordMap.get(d) === 'planned').length;
-  const holidayDays = workingDaysInRange.filter(d => recordMap.get(d) === 'holiday').length;
-  const timeOffDays = workingDaysInRange.filter(d => recordMap.get(d) === 'time-off').length;
+  const officeAttendedDays = workingDaysInRange.filter(d => recordMap.get(d)?.status === 'office').length;
+  const wfhDays = workingDaysInRange.filter(d => recordMap.get(d)?.status === 'wfh').length;
+  const plannedDays = workingDaysInRange.filter(d => recordMap.get(d)?.status === 'planned').length;
+  const holidayDays = workingDaysInRange.filter(d => recordMap.get(d)?.status === 'holiday').length;
+  const timeOffDays = workingDaysInRange.filter(d => recordMap.get(d)?.status === 'time-off').length;
+  
+  // Count holidays and time-off for adjusted working days calculation
+  // This includes holidays on non-working days too
+  const adjustmentHolidayDays = Array.from(recordMap.values()).filter(r => r.status === 'holiday').length;
+  const adjustmentTimeOffDays = Array.from(recordMap.values()).filter(r => r.status === 'time-off').length;
 
   const totalWorkingDays = workingDaysInRange.length;
   
-  // Adjusted working days excludes holidays and time-off
-  const adjustedWorkingDays = totalWorkingDays - holidayDays - timeOffDays;
+  // Adjusted working days excludes holidays and time-off (count all holidays/time-off, not just on working days)
+  const adjustedWorkingDays = totalWorkingDays - adjustmentHolidayDays - adjustmentTimeOffDays;
   
   // Calculate attendance percentage based on adjusted working days
   const attendancePercentage = adjustedWorkingDays > 0 

@@ -172,7 +172,8 @@ export default function AttendanceCalendar({
           const status = getRecordStatus(day.dateStr);
           const isToday = day.dateStr === getTodayLocalDateString();
           const isFuture = isFutureDate(day.dateStr);
-          const isEditable = !isFuture && day.isCurrentMonth;
+          // Allow editing past dates (office/wfh) and today/future dates (planned/holiday)
+          const isEditable = day.isCurrentMonth;
 
           return (
             <button

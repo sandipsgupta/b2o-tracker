@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
   getAttendanceRecords,
@@ -30,13 +31,12 @@ export const attendanceRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const records = await getAttendanceRecords(ctx.user.id, input.startDate, input.endDate);
-      console.log(`[DEBUG] getRecords - User ${ctx.user.id}, Range ${input.startDate} to ${input.endDate}, Found ${records.length} records`);
-      records.forEach(r => console.log(`  - ${r.date}: ${r.status}`));
       return records;
     }),
 
   /**
    * Log attendance for a specific date
+   * Validation: Past dates can only be office/wfh, today/future can be planned/holiday
    */
   logAttendance: protectedProcedure
     .input(
@@ -46,9 +46,20 @@ export const attendanceRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      console.log(`[DEBUG] logAttendance - User ${ctx.user.id}, Date ${input.date}, Status ${input.status}`);
+      // Get today's date in local timezone (YYYY-MM-DD format)
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const isPast = input.date < todayStr;
+
+      // Validation: planned and holiday can only be set on today or future dates
+      if ((input.status === "planned" || input.status === "holiday") && isPast) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot mark past dates as ${input.status}`,
+        });
+      }
+
       const result = await upsertAttendanceRecord(ctx.user.id, input.date, input.status);
-      console.log(`[DEBUG] logAttendance - Saved: ${result?.date} = ${result?.status}`);
       return result;
     }),
 
