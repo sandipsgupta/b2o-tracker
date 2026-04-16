@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,27 +13,37 @@ import AIInsights from "@/components/AIInsights";
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
 
   // Fetch data
   const weeklyStats = trpc.attendance.getWeeklyStats.useQuery();
   const monthlyStats = trpc.attendance.getMonthlyStats.useQuery();
   const trendData = trpc.attendance.getTrendData.useQuery({ weeks: 12 });
+  
+  // Fetch entire current month's records (not just through today)
+  // This ensures the calendar has all data for the current month
+  const currentDate = new Date();
+  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  
   const attendanceRecords = trpc.attendance.getRecords.useQuery({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    startDate: monthStart.toISOString().split("T")[0],
+    endDate: monthEnd.toISOString().split("T")[0],
   });
 
   const logAttendance = trpc.attendance.logAttendance.useMutation({
     onSuccess: () => {
+      // Refetch all stats after logging attendance
       weeklyStats.refetch();
       monthlyStats.refetch();
       trendData.refetch();
       attendanceRecords.refetch();
     },
+    onError: (error) => {
+      console.error("Failed to log attendance:", error);
+    },
   });
 
-  const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading;
+  const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
 
   if (isLoading) {
     return (
@@ -68,7 +78,10 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <AttendanceCalendar
-                records={attendanceRecords.data || []}
+                records={attendanceRecords.data?.map(r => ({
+                  date: r.date,
+                  status: r.status as "office" | "wfh" | "planned"
+                })) || []}
                 onDateSelect={(date, status) => {
                   logAttendance.mutate({ date, status });
                 }}
@@ -106,7 +119,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Right Column - Stats and Insights */}
+        {/* Right Column - Stats and AI Insights */}
         <div className="space-y-6">
           {/* Monthly Progress */}
           {monthlyStats.data && (
@@ -121,7 +134,7 @@ export default function Dashboard() {
             </Card>
           )}
 
-          {/* Remaining Days */}
+          {/* Days Needed */}
           {monthlyStats.data && (
             <Card>
               <CardHeader>
@@ -135,7 +148,15 @@ export default function Dashboard() {
 
           {/* AI Insights */}
           {monthlyStats.data && (
-            <AIInsights stats={monthlyStats.data} />
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Insights</CardTitle>
+                <CardDescription>Smart recommendations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AIInsights stats={monthlyStats.data} />
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
