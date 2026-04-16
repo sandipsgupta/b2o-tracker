@@ -92,3 +92,13 @@
 - [x] Update UI to show adjusted target based on holidays
 - [x] Update AI insights to account for holidays
 - [x] Write tests for holiday/time-off calculations
+
+
+## Phase 10: Debug Attendance Count Inconsistencies
+- [ ] Calendar shows 8 office days but "This Month" card shows 4 days
+- [ ] Identify which records are being counted vs skipped
+- [ ] Fix backend endpoint returning different counts
+- [ ] Verify "Days remaining" calculation (should be 8, not 4)
+- [ ] Ensure all endpoints use same attendance counting logic
+- [ ] Add debug logging to trace record fetching
+- [ ] Test with actual user data to verify fix

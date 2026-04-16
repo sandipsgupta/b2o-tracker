@@ -29,7 +29,10 @@ export const attendanceRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      return getAttendanceRecords(ctx.user.id, input.startDate, input.endDate);
+      const records = await getAttendanceRecords(ctx.user.id, input.startDate, input.endDate);
+      console.log(`[DEBUG] getRecords - User ${ctx.user.id}, Range ${input.startDate} to ${input.endDate}, Found ${records.length} records`);
+      records.forEach(r => console.log(`  - ${r.date}: ${r.status}`));
+      return records;
     }),
 
   /**
@@ -43,7 +46,10 @@ export const attendanceRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return upsertAttendanceRecord(ctx.user.id, input.date, input.status);
+      console.log(`[DEBUG] logAttendance - User ${ctx.user.id}, Date ${input.date}, Status ${input.status}`);
+      const result = await upsertAttendanceRecord(ctx.user.id, input.date, input.status);
+      console.log(`[DEBUG] logAttendance - Saved: ${result?.date} = ${result?.status}`);
+      return result;
     }),
 
   /**
@@ -81,14 +87,19 @@ export const attendanceRouter = router({
     if (!settings) return null;
 
     const monthRange = getCurrentMonthRange();
+    console.log(`[DEBUG] getMonthlyStats - Month range: ${monthRange.start} to ${monthRange.end}`);
     const records = await getAttendanceRecords(ctx.user.id, monthRange.start, monthRange.end);
+    console.log(`[DEBUG] getMonthlyStats - Found ${records.length} records`);
+    records.forEach(r => console.log(`  - ${r.date}: ${r.status}`));
 
-    return calculateAttendanceStats(
+    const stats = calculateAttendanceStats(
       records,
       monthRange,
       settings.workingDays,
       settings.targetPercentage
     );
+    console.log(`[DEBUG] getMonthlyStats - Stats: ${stats.officeAttendedDays} attended, ${stats.totalWorkingDays} total, ${stats.remainingDaysNeeded} remaining`);
+    return stats;
   }),
 
   /**
