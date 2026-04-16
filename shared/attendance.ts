@@ -9,7 +9,6 @@
  */
 export function getDayOfWeek(dateStr: string): number {
   const [year, month, day] = dateStr.split('-').map(Number);
-  // Create date in local timezone (NOT UTC)
   const date = new Date(year, month - 1, day);
   const dayOfWeek = date.getDay();
   return dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday (0) to 7
@@ -140,6 +139,9 @@ export function getCurrentMonthRange(): { start: string; end: string } {
 
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 0);
+  // month is 0-indexed: getMonth()=3 means April
+  // new Date(2026, 3, 1) = April 1st
+  // new Date(2026, 4, 0) = April 30th
 
   return {
     start: formatDateToString(start),
