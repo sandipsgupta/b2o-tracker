@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getTodayLocalDateString, isFutureDate } from "@/lib/timezone";
+import { getTodayLocalDateString, isFutureDate, localDateToString } from "@/lib/timezone";
 
 interface AttendanceRecord {
   date: string;
@@ -42,20 +42,20 @@ export default function AttendanceCalendar({
   // Previous month's days
   for (let i = (firstDay === 0 ? 6 : firstDay - 1); i > 0; i--) {
     const date = daysInPrevMonth - i + 1;
-    const dateStr = new Date(year, month - 1, date).toISOString().split("T")[0];
+    const dateStr = localDateToString(new Date(year, month - 1, date));
     calendarDays.push({ date, isCurrentMonth: false, dateStr });
   }
 
   // Current month's days
   for (let i = 1; i <= daysInMonth; i++) {
-    const dateStr = new Date(year, month, i).toISOString().split("T")[0];
+    const dateStr = localDateToString(new Date(year, month, i));
     calendarDays.push({ date: i, isCurrentMonth: true, dateStr });
   }
 
   // Next month's days
   const remainingDays = 42 - calendarDays.length;
   for (let i = 1; i <= remainingDays; i++) {
-    const dateStr = new Date(year, month + 1, i).toISOString().split("T")[0];
+    const dateStr = localDateToString(new Date(year, month + 1, i));
     calendarDays.push({ date: i, isCurrentMonth: false, dateStr });
   }
 

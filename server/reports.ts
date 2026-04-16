@@ -56,8 +56,9 @@ export function generateMonthlyReport(
   const weeklyBreakdown = new Map<number, { office: number; wfh: number; total: number }>();
 
   records.forEach(record => {
-    const date = new Date(record.date + "T00:00:00Z");
-    const weekNumber = Math.ceil((date.getUTCDate()) / 7);
+    const [year, month, day] = record.date.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const weekNumber = Math.ceil((date.getDate()) / 7);
 
     if (!weeklyBreakdown.has(weekNumber)) {
       weeklyBreakdown.set(weekNumber, { office: 0, wfh: 0, total: 0 });
