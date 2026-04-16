@@ -87,10 +87,7 @@ export const attendanceRouter = router({
     if (!settings) return null;
 
     const monthRange = getCurrentMonthRange();
-    console.log(`[DEBUG] getMonthlyStats - Month range: ${monthRange.start} to ${monthRange.end}`);
     const records = await getAttendanceRecords(ctx.user.id, monthRange.start, monthRange.end);
-    console.log(`[DEBUG] getMonthlyStats - Found ${records.length} records`);
-    records.forEach(r => console.log(`  - ${r.date}: ${r.status}`));
 
     const stats = calculateAttendanceStats(
       records,
@@ -98,7 +95,6 @@ export const attendanceRouter = router({
       settings.workingDays,
       settings.targetPercentage
     );
-    console.log(`[DEBUG] getMonthlyStats - Stats: ${stats.officeAttendedDays} attended, ${stats.totalWorkingDays} total, ${stats.remainingDaysNeeded} remaining`);
     return stats;
   }),
 

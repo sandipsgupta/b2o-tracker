@@ -62,9 +62,10 @@ describe("Attendance Calculations", () => {
 
       expect(stats.remainingDaysNeeded).toBeGreaterThan(0);
       expect(stats.remainingDaysNeeded).toBeLessThanOrEqual(stats.totalWorkingDays);
-      expect(stats.officeAttendedDays + stats.remainingDaysNeeded).toBeGreaterThanOrEqual(
-        Math.ceil((60 / 100) * stats.totalWorkingDays)
-      );
+      // With proper rounding (>= 0.5), the target should be floor(exact + 0.5)
+      const targetDaysExact = (60 / 100) * stats.totalWorkingDays;
+      const targetDays = Math.floor(targetDaysExact + 0.5);
+      expect(stats.officeAttendedDays + stats.remainingDaysNeeded).toBeGreaterThanOrEqual(targetDays);
     });
 
     it("should respect custom target percentage", () => {

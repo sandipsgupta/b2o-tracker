@@ -90,7 +90,9 @@ export function calculateAttendanceStats(
     : 0;
 
   // Calculate remaining days needed to reach target (based on adjusted working days)
-  const targetDays = Math.ceil((targetPercentage / 100) * adjustedWorkingDays);
+  // Use proper rounding: round up only if fractional part >= 0.5
+  const targetDaysExact = (targetPercentage / 100) * adjustedWorkingDays;
+  const targetDays = Math.floor(targetDaysExact + 0.5); // Proper rounding instead of Math.ceil
   const remainingDaysNeeded = Math.max(0, targetDays - officeAttendedDays);
 
   return {
