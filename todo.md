@@ -36,7 +36,7 @@
 - [x] Implement forecasting logic
 - [x] Create AI Insights panel UI component
 - [x] Integrate AI insights into dashboard
-- [ ] Write vitest tests for AI logic
+- [x] Write vitest tests for AI logic
 
 ## Phase 5: Public Dashboard & Exports
 - [x] Create public dashboard page (read-only, token-based access)
