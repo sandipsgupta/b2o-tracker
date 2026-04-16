@@ -11,6 +11,8 @@ interface MonthlyProgressProps {
 
 export default function MonthlyProgress({ stats }: MonthlyProgressProps) {
   const isOnTrack = stats.attendancePercentage >= stats.targetPercentage;
+  // Calculate target days needed (60% of total working days)
+  const targetDaysNeeded = Math.floor((stats.targetPercentage / 100) * stats.totalWorkingDays + 0.5);
 
   return (
     <div className="space-y-4">
@@ -31,9 +33,7 @@ export default function MonthlyProgress({ stats }: MonthlyProgressProps) {
         <div>
           <p className="text-xs text-muted-foreground">Target</p>
           <p className="text-2xl font-semibold">{stats.targetPercentage}%</p>
-          <p className={`text-xs font-medium ${isOnTrack ? "text-green-600" : "text-amber-600"}`}>
-            {isOnTrack ? "On track" : "Behind"}
-          </p>
+          <p className="text-xs text-muted-foreground">{targetDaysNeeded} of {stats.totalWorkingDays} days</p>
         </div>
       </div>
     </div>
