@@ -39,7 +39,7 @@ export const attendanceRouter = router({
     .input(
       z.object({
         date: z.string(),
-        status: z.enum(["office", "wfh", "planned"]),
+        status: z.enum(["office", "wfh", "planned", "holiday", "time-off"]),
       })
     )
     .mutation(async ({ ctx, input }) => {

@@ -1,0 +1,1 @@
+ALTER TABLE `attendance_records` MODIFY COLUMN `status` enum('office','wfh','planned','holiday','time-off') NOT NULL;

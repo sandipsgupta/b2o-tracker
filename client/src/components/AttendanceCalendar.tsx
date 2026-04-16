@@ -6,12 +6,12 @@ import { getTodayLocalDateString, isFutureDate, localDateToString } from "@/lib/
 
 interface AttendanceRecord {
   date: string;
-  status: "office" | "wfh" | "planned";
+  status: "office" | "wfh" | "planned" | "holiday" | "time-off";
 }
 
 interface AttendanceCalendarProps {
   records: AttendanceRecord[];
-  onDateSelect: (date: string, status: "office" | "wfh" | "planned") => void;
+  onDateSelect: (date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off") => void;
   onDateDelete?: (date: string) => void;
   isLoading?: boolean;
 }
@@ -76,7 +76,7 @@ export default function AttendanceCalendar({
     setShowStatusMenu(true);
   };
 
-  const handleStatusSelect = (status: "office" | "wfh" | "planned") => {
+  const handleStatusSelect = (status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
     if (selectedDate) {
       onDateSelect(selectedDate, status);
       setShowStatusMenu(false);
@@ -98,8 +98,46 @@ export default function AttendanceCalendar({
         return "bg-purple-100 text-purple-900 border-purple-300";
       case "planned":
         return "bg-amber-100 text-amber-900 border-amber-300";
+      case "holiday":
+        return "bg-red-100 text-red-900 border-red-300";
+      case "time-off":
+        return "bg-orange-100 text-orange-900 border-orange-300";
       default:
         return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "office":
+        return "🏢";
+      case "wfh":
+        return "🏠";
+      case "planned":
+        return "📅";
+      case "holiday":
+        return "🎉";
+      case "time-off":
+        return "🌴";
+      default:
+        return "";
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case "office":
+        return "Office Day";
+      case "wfh":
+        return "WFH";
+      case "planned":
+        return "Planned";
+      case "holiday":
+        return "Holiday";
+      case "time-off":
+        return "Time Off";
+      default:
+        return "";
     }
   };
 
@@ -120,47 +158,39 @@ export default function AttendanceCalendar({
         </div>
       </div>
 
-      {/* Days of week */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2">
+        {/* Day headers */}
         {DAYS_OF_WEEK.map(day => (
-          <div key={day} className="text-center text-sm font-semibold text-muted-foreground">
+          <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
             {day}
           </div>
         ))}
-      </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
+        {/* Calendar days */}
         {calendarDays.map((day, idx) => {
           const status = getRecordStatus(day.dateStr);
-          const today = getTodayLocalDateString();
-          const isToday = day.dateStr === today;
-          const isSelected = day.dateStr === selectedDate;
-          // Only allow editing today and past dates (not future dates)
+          const isToday = day.dateStr === getTodayLocalDateString();
           const isFuture = isFutureDate(day.dateStr);
-          const isEditable = day.isCurrentMonth && !isFuture;
+          const isEditable = !isFuture && day.isCurrentMonth;
 
           return (
             <button
               key={idx}
               onClick={() => isEditable && handleDateClick(day.dateStr)}
-              disabled={isLoading || !isEditable}
+              disabled={!isEditable}
               className={cn(
-                "aspect-square p-2 rounded-lg border-2 transition-all text-sm font-medium",
-                isEditable ? "cursor-pointer hover:shadow-md" : "opacity-30 cursor-default",
-                isToday && "ring-2 ring-primary ring-offset-2",
-                isSelected && "ring-2 ring-primary",
-                getStatusColor(status),
-                isLoading && "opacity-50 cursor-not-allowed"
+                "p-3 rounded-lg border-2 transition-all text-sm font-medium",
+                day.isCurrentMonth ? "cursor-pointer" : "text-gray-400 bg-gray-50",
+                isToday && "ring-2 ring-blue-500",
+                status ? getStatusColor(status) : "bg-white border-gray-200 hover:border-blue-300",
+                !isEditable && "opacity-50 cursor-not-allowed",
+                isEditable && !status && "hover:bg-blue-50"
               )}
             >
-              <div className="flex flex-col items-center justify-center h-full">
-                <span>{day.date}</span>
-                {status && (
-                  <span className="text-xs mt-1">
-                    {status === "office" ? "🏢" : status === "wfh" ? "🏠" : "📅"}
-                  </span>
-                )}
+              <div className="text-center">
+                <div className="font-semibold">{day.date}</div>
+                {status && <div className="text-lg">{getStatusIcon(status)}</div>}
               </div>
             </button>
           );
@@ -169,53 +199,58 @@ export default function AttendanceCalendar({
 
       {/* Status Menu */}
       {showStatusMenu && selectedDate && (
-        <div className="p-4 bg-card border rounded-lg space-y-3">
-          <p className="text-sm font-medium">Select status for {selectedDate}:</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={getRecordStatus(selectedDate) === "office" ? "default" : "outline"}
-              onClick={() => handleStatusSelect("office")}
-              disabled={isLoading}
-            >
-              Office Day
-            </Button>
-            <Button
-              size="sm"
-              variant={getRecordStatus(selectedDate) === "wfh" ? "default" : "outline"}
-              onClick={() => handleStatusSelect("wfh")}
-              disabled={isLoading}
-            >
-              WFH
-            </Button>
-            <Button
-              size="sm"
-              variant={getRecordStatus(selectedDate) === "planned" ? "default" : "outline"}
-              onClick={() => handleStatusSelect("planned")}
-              disabled={isLoading}
-            >
-              Planned
-            </Button>
-            {getRecordStatus(selectedDate) && (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleDeleteRecord}
-                disabled={isLoading}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+            <h4 className="text-lg font-semibold mb-4">
+              {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })}
+            </h4>
+
+            <div className="space-y-2">
+              {(["office", "wfh", "planned", "holiday", "time-off"] as const).map(status => (
+                <button
+                  key={status}
+                  onClick={() => handleStatusSelect(status)}
+                  className="w-full p-3 text-left rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all"
+                >
+                  <span className="text-lg mr-2">{getStatusIcon(status)}</span>
+                  <span className="font-medium">{getStatusLabel(status)}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-4 border-t space-y-2">
+              {getRecordStatus(selectedDate) && (
+                <button
+                  onClick={handleDeleteRecord}
+                  className="w-full p-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-all"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setShowStatusMenu(false)}
+                className="w-full p-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-all"
               >
-                Clear
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowStatusMenu(false)}
-            >
-              Close
-            </Button>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs pt-4 border-t">
+        {(["office", "wfh", "planned", "holiday", "time-off"] as const).map(status => (
+          <div key={status} className="flex items-center gap-2">
+            <span className="text-lg">{getStatusIcon(status)}</span>
+            <span className="text-gray-600">{getStatusLabel(status)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

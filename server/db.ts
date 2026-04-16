@@ -144,7 +144,7 @@ export async function getAttendanceRecords(userId: number, startDate: string, en
 /**
  * Upsert attendance record for a specific date
  */
-export async function upsertAttendanceRecord(userId: number, date: string, status: "office" | "wfh" | "planned") {
+export async function upsertAttendanceRecord(userId: number, date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off") {
   const db = await getDb();
   if (!db) return null;
 

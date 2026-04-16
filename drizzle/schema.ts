@@ -34,7 +34,7 @@ export const attendanceRecords = mysqlTable("attendance_records", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
-  status: mysqlEnum("status", ["office", "wfh", "planned"]).notNull(),
+  status: mysqlEnum("status", ["office", "wfh", "planned", "holiday", "time-off"]).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

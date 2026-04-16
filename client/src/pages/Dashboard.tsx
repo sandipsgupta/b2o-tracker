@@ -94,9 +94,9 @@ export default function Dashboard() {
               <AttendanceCalendar
                 records={attendanceRecords.data?.map(r => ({
                   date: r.date,
-                  status: r.status as "office" | "wfh" | "planned"
+                  status: r.status as "office" | "wfh" | "planned" | "holiday" | "time-off"
                 })) || []}
-                onDateSelect={(date, status) => {
+                onDateSelect={(date, status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
                   logAttendance.mutate({ date, status });
                 }}
                 onDateDelete={(date) => {

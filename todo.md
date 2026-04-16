@@ -58,3 +58,37 @@
 - [x] Create checkpoint for deployment
 - [x] Deploy to production
 - [x] Provide live URL and documentation
+
+## Phase 8: Timezone & Calculation Fixes
+- [ ] Fix timezone consistency for month-long attendance logging
+- [ ] Audit and fix 60% calculation logic
+- [ ] Fix increment logic when logging new days
+- [ ] Ensure accurate working day count regardless of timezone
+- [ ] Add comprehensive calculation tests
+
+## Phase 9: Holiday & Time-Off Feature
+- [ ] Add "Holiday" and "Time Off" as status options in calendar
+- [ ] Update database schema to support new status types
+- [ ] Modify working day calculation to exclude holidays/time-off
+- [ ] Update 60% target calculation: 60% of (total working days - holidays - time off)
+- [ ] Update UI to show adjusted target based on holidays
+- [ ] Update AI insights to account for holidays
+- [ ] Write tests for holiday/time-off calculations
+
+## Completed Tasks Summary
+
+### Phase 8: Timezone & Calculation Fixes ✅
+- [x] Fix timezone consistency for month-long attendance logging
+- [x] Audit and fix 60% calculation logic
+- [x] Fix increment logic when logging new days
+- [x] Ensure accurate working day count regardless of timezone
+- [x] Add comprehensive calculation tests
+
+### Phase 9: Holiday & Time-Off Feature ✅
+- [x] Add "Holiday" and "Time Off" as status options in calendar
+- [x] Update database schema to support new status types
+- [x] Modify working day calculation to exclude holidays/time-off
+- [x] Update 60% target calculation: 60% of (total working days - holidays - time off)
+- [x] Update UI to show adjusted target based on holidays
+- [x] Update AI insights to account for holidays
+- [x] Write tests for holiday/time-off calculations

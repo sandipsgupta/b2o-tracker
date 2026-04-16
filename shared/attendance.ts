@@ -28,19 +28,23 @@ export function isWorkingDay(dateStr: string, workingDays: string): boolean {
 /**
  * Calculate attendance statistics for a date range
  * CRITICAL: Uses local timezone for all date calculations
+ * Supports: office, wfh, planned, holiday, time-off statuses
  */
 export interface AttendanceStats {
   totalWorkingDays: number;
   officeAttendedDays: number;
   wfhDays: number;
   plannedDays: number;
+  holidayDays: number;
+  timeOffDays: number;
+  adjustedWorkingDays: number; // totalWorkingDays - holidays - time off
   attendancePercentage: number;
   remainingDaysNeeded: number;
   targetPercentage: number;
 }
 
 export function calculateAttendanceStats(
-  records: Array<{ date: string; status: 'office' | 'wfh' | 'planned' }>,
+  records: Array<{ date: string; status: 'office' | 'wfh' | 'planned' | 'holiday' | 'time-off' }>,
   dateRange: { start: string; end: string },
   workingDays: string,
   targetPercentage: number
@@ -73,12 +77,21 @@ export function calculateAttendanceStats(
   const officeAttendedDays = workingDaysInRange.filter(d => recordMap.get(d) === 'office').length;
   const wfhDays = workingDaysInRange.filter(d => recordMap.get(d) === 'wfh').length;
   const plannedDays = workingDaysInRange.filter(d => recordMap.get(d) === 'planned').length;
+  const holidayDays = workingDaysInRange.filter(d => recordMap.get(d) === 'holiday').length;
+  const timeOffDays = workingDaysInRange.filter(d => recordMap.get(d) === 'time-off').length;
 
   const totalWorkingDays = workingDaysInRange.length;
-  const attendancePercentage = totalWorkingDays > 0 ? Math.round((officeAttendedDays / totalWorkingDays) * 100) : 0;
+  
+  // Adjusted working days excludes holidays and time-off
+  const adjustedWorkingDays = totalWorkingDays - holidayDays - timeOffDays;
+  
+  // Calculate attendance percentage based on adjusted working days
+  const attendancePercentage = adjustedWorkingDays > 0 
+    ? Math.round((officeAttendedDays / adjustedWorkingDays) * 100) 
+    : 0;
 
-  // Calculate remaining days needed to reach target
-  const targetDays = Math.ceil((targetPercentage / 100) * totalWorkingDays);
+  // Calculate remaining days needed to reach target (based on adjusted working days)
+  const targetDays = Math.ceil((targetPercentage / 100) * adjustedWorkingDays);
   const remainingDaysNeeded = Math.max(0, targetDays - officeAttendedDays);
 
   return {
@@ -86,6 +99,9 @@ export function calculateAttendanceStats(
     officeAttendedDays,
     wfhDays,
     plannedDays,
+    holidayDays,
+    timeOffDays,
+    adjustedWorkingDays,
     attendancePercentage,
     remainingDaysNeeded,
     targetPercentage,
