@@ -148,3 +148,9 @@
 - [ ] Add VAPID key configuration
 - [ ] Implement server-side push sending (for auto-WFH notifications)
 - [ ] Test push notifications with sample events
+
+## Phase 14: Preserve Tracked Hours on Status Change
+- [x] Fix logAttendance upsert to not overwrite startTime/endTime/hoursWorked when changing status
+- [x] Uses UPDATE (status only) when record exists, INSERT only for new records
+- [x] All 58 tests passing
+- [x] Save checkpoint

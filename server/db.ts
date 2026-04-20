@@ -149,18 +149,26 @@ export async function upsertAttendanceRecord(userId: number, date: string, statu
   if (!db) return null;
 
   try {
-    // First, delete any existing records for this user and date
-    await db.delete(attendanceRecords)
-      .where(and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, date)));
-    
-    // Then insert the new record
-    await db.insert(attendanceRecords).values({ userId, date, status });
-    
-    // Return the newly inserted record
+    // Check if a record already exists for this date
+    const existing = await db.select().from(attendanceRecords)
+      .where(and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, date)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // UPDATE only the status — preserve startTime, endTime, hoursWorked so tracked hours are not lost
+      await db.update(attendanceRecords)
+        .set({ status })
+        .where(and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, date)));
+    } else {
+      // INSERT new record
+      await db.insert(attendanceRecords).values({ userId, date, status });
+    }
+
+    // Return the updated/inserted record
     const result = await db.select().from(attendanceRecords)
       .where(and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, date)))
       .limit(1);
-    
+
     return result[0] || null;
   } catch (error) {
     console.error(`[Database] Failed to upsert attendance record for ${date}:`, error);
