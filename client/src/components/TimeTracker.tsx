@@ -12,17 +12,21 @@ export function TimeTracker({ date, onClose }: TimeTrackerProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [hoursDisplay, setHoursDisplay] = useState("0h 0m");
+  const [startTimeRef, setStartTimeRef] = useState<string | null>(null);
 
   const startTracking = trpc.timeTracking.startTracking.useMutation();
   const stopTracking = trpc.timeTracking.stopTracking.useMutation();
-  const getStatus = trpc.timeTracking.getTrackingStatus.useQuery({ date });
+  const getStatus = trpc.timeTracking.getTrackingStatus.useQuery({ date }, {
+    refetchInterval: 5000, // Refetch every 5 seconds to stay in sync
+  });
 
+  // Initialize and auto-start if not already tracking
   useEffect(() => {
     if (getStatus.data) {
       setIsTracking(getStatus.data.isTracking || false);
-      if (getStatus.data.elapsedMinutes) {
-        setElapsedMinutes(getStatus.data.elapsedMinutes);
-      }
+      setStartTimeRef(getStatus.data.startTime);
+      
+      // Display completed hours if tracking is done
       if (getStatus.data.hoursWorked) {
         const hours = Math.floor(getStatus.data.hoursWorked / 60);
         const mins = getStatus.data.hoursWorked % 60;
@@ -31,25 +35,34 @@ export function TimeTracker({ date, onClose }: TimeTrackerProps) {
     }
   }, [getStatus.data]);
 
+  // Update elapsed time display every second when tracking
   useEffect(() => {
-    if (!isTracking) return;
+    if (!isTracking || !startTimeRef) return;
 
-    const interval = setInterval(() => {
-      setElapsedMinutes((prev) => {
-        const newMinutes = prev + 1;
-        if (newMinutes >= 480) {
-          handleStop();
-          return 480;
-        }
-        const hours = Math.floor(newMinutes / 60);
-        const mins = newMinutes % 60;
-        setHoursDisplay(`${hours}h ${mins}m`);
-        return newMinutes;
-      });
-    }, 60000);
+    const updateDisplay = () => {
+      const start = new Date(startTimeRef).getTime();
+      const now = new Date().getTime();
+      const elapsedMs = now - start;
+      const elapsedMins = Math.floor(elapsedMs / (1000 * 60));
+      
+      // Auto-stop after 8 hours (480 minutes)
+      if (elapsedMins >= 480) {
+        handleStop();
+        return;
+      }
+      
+      const hours = Math.floor(elapsedMins / 60);
+      const mins = elapsedMins % 60;
+      setHoursDisplay(`${hours}h ${mins}m`);
+      setElapsedMinutes(elapsedMins);
+    };
 
+    updateDisplay();
+    const interval = setInterval(updateDisplay, 1000);
     return () => clearInterval(interval);
-  }, [isTracking]);
+  }, [isTracking, startTimeRef]);
+
+
 
   const handleStart = async () => {
     try {

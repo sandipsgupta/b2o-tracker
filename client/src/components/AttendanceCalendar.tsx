@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getTodayLocalDateString, isFutureDate, localDateToString } from "@/lib/timezone";
+import { TimeTracker } from "./TimeTracker";
 
 interface AttendanceRecord {
   date: string;
@@ -201,7 +202,7 @@ export default function AttendanceCalendar({
       {/* Status Menu */}
       {showStatusMenu && selectedDate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h4 className="text-lg font-semibold mb-4">
               {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
                 weekday: "long",
@@ -209,6 +210,13 @@ export default function AttendanceCalendar({
                 day: "numeric",
               })}
             </h4>
+
+            {/* Show TimeTracker only when Office status is selected */}
+            {getRecordStatus(selectedDate) === "office" && selectedDate === getTodayLocalDateString() && (
+              <div className="mb-4">
+                <TimeTracker date={selectedDate} onClose={() => setShowStatusMenu(false)} />
+              </div>
+            )}
 
             <div className="space-y-2">
               {(["office", "wfh", "planned", "holiday", "time-off"] as const).map(status => (

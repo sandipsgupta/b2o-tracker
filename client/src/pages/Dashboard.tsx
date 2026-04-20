@@ -56,8 +56,12 @@ export default function Dashboard() {
     },
   });
 
-  const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
   const today = getTodayLocalDateString();
+
+  // Fetch today's time tracking status
+  const timeTrackingStatus = trpc.timeTracking.getTrackingStatus.useQuery({ date: today });
+
+  const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
 
   if (isLoading) {
     return (
@@ -148,6 +152,26 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <MonthlyProgress stats={monthlyStats.data} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Hours Worked Today */}
+          {timeTrackingStatus.data && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Hours Today</CardTitle>
+                <CardDescription>Time tracking</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {timeTrackingStatus.data.hoursWorked ? `${Math.floor(timeTrackingStatus.data.hoursWorked / 60)}h ${timeTrackingStatus.data.hoursWorked % 60}m` : "0h 0m"}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {timeTrackingStatus.data.isTracking ? "⏱️ Timer running" : "✓ Tracking available"}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}

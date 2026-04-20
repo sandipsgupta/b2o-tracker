@@ -31,6 +31,14 @@ export const timeTrackingRouter = router({
         });
       }
 
+      // Only allow time tracking for office status
+      if (existing[0].status !== "office") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Time tracking only available for Office status",
+        });
+      }
+
       await db
         .update(attendanceRecords)
         .set({ startTime })
@@ -76,7 +84,7 @@ export const timeTrackingRouter = router({
 
       await db
         .update(attendanceRecords)
-        .set({ endTime, hoursWorked })
+        .set({ endTime, hoursWorked, startTime: null }) // Clear startTime after stopping
         .where(
           and(
             eq(attendanceRecords.userId, ctx.user.id),

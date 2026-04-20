@@ -107,7 +107,12 @@
 ## Phase 11: Major Enhancements - Planned Days & Time Tracking
 - [x] Fix holiday update bug for past dates (April 1 not updating to Holiday)
 - [x] Add Planned Days counter display below "Days remaining"
-- [ ] Implement time tracking counter (start/stop/auto-end after 8 hours) - DEFERRED: needs DB migration
+- [x] Implement time tracking counter (start/stop/auto-end after 8 hours)
+- [x] Integrate TimeTracker into AttendanceCalendar status modal
+- [x] Display hours in "Hours Today" card on dashboard
+- [x] Improve live time display (derive from startTime, update every second)
+- [x] Add server-side validation (office status only, clear startTime after stop)
+- [x] Add comprehensive vitest tests for time tracking (10 tests)
 - [ ] Add auto-WFH assignment at end of week (Sunday night)
 - [ ] Implement browser push notifications with optional phone number in profile
 - [ ] Debug and fix WFH graph display issue
