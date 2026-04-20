@@ -154,3 +154,12 @@
 - [x] Uses UPDATE (status only) when record exists, INSERT only for new records
 - [x] All 58 tests passing
 - [x] Save checkpoint
+
+## Phase 15: Fix Office Day Graph
+- [x] Audit WeeklyChart: root cause was Recharts omitting zero-value bars + grey color confusion
+- [x] Redesigned to horizontal bar chart (layout=vertical) with per-row categories using Cell colors
+- [x] Office Days always visible (blue), WFH Days (purple), Not Logged (slate grey) — all distinct
+- [x] minPointSize=3 ensures even zero-value bars show a sliver
+- [x] WFH graph still works correctly
+- [x] 64 tests passing
+- [x] Save checkpoint
