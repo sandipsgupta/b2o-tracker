@@ -66,10 +66,12 @@ export function TimeTracker({ date, onClose }: TimeTrackerProps) {
 
   const handleStart = async () => {
     try {
-      await startTracking.mutateAsync({ date });
+      const result = await startTracking.mutateAsync({ date });
       setIsTracking(true);
       setElapsedMinutes(0);
       setHoursDisplay("0h 0m");
+      // Update startTimeRef so the live timer kicks in immediately
+      setStartTimeRef(result.startTime ?? null);
     } catch (error) {
       console.error("Failed to start tracking:", error);
     }
@@ -79,9 +81,10 @@ export function TimeTracker({ date, onClose }: TimeTrackerProps) {
     try {
       const result = await stopTracking.mutateAsync({ date });
       setIsTracking(false);
+      setStartTimeRef(null);
       setHoursDisplay(result.hoursDisplay);
       await getStatus.refetch();
-      onClose?.();
+      // Don't auto-close — let user see the final time before closing
     } catch (error) {
       console.error("Failed to stop tracking:", error);
     }

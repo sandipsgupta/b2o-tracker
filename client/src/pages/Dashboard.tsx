@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { getTodayLocalDateString, localDateToString } from "@/lib/timezone";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,8 +58,40 @@ export default function Dashboard() {
 
   const today = getTodayLocalDateString();
 
-  // Fetch today's time tracking status
-  const timeTrackingStatus = trpc.timeTracking.getTrackingStatus.useQuery({ date: today });
+  // Fetch today's time tracking status — poll every 30s to stay in sync
+  const timeTrackingStatus = trpc.timeTracking.getTrackingStatus.useQuery(
+    { date: today },
+    { refetchInterval: 30000 }
+  );
+
+  // Live elapsed time display for active tracking session
+  const [liveHoursDisplay, setLiveHoursDisplay] = useState("0h 0m");
+  useEffect(() => {
+    const data = timeTrackingStatus.data;
+    if (!data?.isTracking || !data.startTime) {
+      // Show completed hours if available
+      if (data?.hoursWorked) {
+        const h = Math.floor(data.hoursWorked / 60);
+        const m = data.hoursWorked % 60;
+        setLiveHoursDisplay(`${h}h ${m}m`);
+      } else {
+        setLiveHoursDisplay("0h 0m");
+      }
+      return;
+    }
+    // Update every second while tracking
+    const tick = () => {
+      const start = new Date(data.startTime!).getTime();
+      const elapsedMs = Date.now() - start;
+      const totalMins = Math.floor(elapsedMs / 60000);
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      setLiveHoursDisplay(`${h}h ${m}m`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [timeTrackingStatus.data]);
 
   const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
 
@@ -156,25 +188,27 @@ export default function Dashboard() {
             </Card>
           )}
 
-          {/* Hours Worked Today */}
-          {timeTrackingStatus.data && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Hours Today</CardTitle>
-                <CardDescription>Time tracking</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {timeTrackingStatus.data.hoursWorked ? `${Math.floor(timeTrackingStatus.data.hoursWorked / 60)}h ${timeTrackingStatus.data.hoursWorked % 60}m` : "0h 0m"}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {timeTrackingStatus.data.isTracking ? "⏱️ Timer running" : "✓ Tracking available"}
-                  </p>
+          {/* Hours Worked Today — always visible */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Hours Today</CardTitle>
+              <CardDescription>Time tracking for office days</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="text-3xl font-bold text-blue-600">
+                  {liveHoursDisplay}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <p className="text-sm text-muted-foreground">
+                  {timeTrackingStatus.data?.isTracking
+                    ? "⏱️ Timer running — open today in calendar to stop"
+                    : timeTrackingStatus.data?.hoursWorked
+                    ? "✓ Session complete"
+                    : "Click today in the calendar to start tracking"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Days Needed */}
           {monthlyStats.data && (

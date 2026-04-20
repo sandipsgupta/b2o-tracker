@@ -73,3 +73,17 @@ export const sharedDashboards = mysqlTable("shared_dashboards", {
 
 export type SharedDashboard = typeof sharedDashboards.$inferSelect;
 export type InsertSharedDashboard = typeof sharedDashboards.$inferInsert;
+/**
+ * Push notification subscriptions: store browser subscription endpoints
+ */
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull(),
+  auth: varchar("auth", { length: 255 }).notNull(),
+  p256dh: varchar("p256dh", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;

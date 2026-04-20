@@ -8,6 +8,7 @@ import { publicRouter } from "./routers/public";
 import { reportsRouter } from "./routers/reports";
 import { aiRouter } from "./routers/ai";
 import { timeTrackingRouter } from "./routers/timeTracking";
+import { notificationsRouter } from "./routers/notifications";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -28,6 +29,7 @@ export const appRouter = router({
   reports: reportsRouter,
   ai: aiRouter,
   timeTracking: timeTrackingRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

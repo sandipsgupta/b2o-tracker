@@ -41,7 +41,7 @@ export const timeTrackingRouter = router({
 
       await db
         .update(attendanceRecords)
-        .set({ startTime })
+        .set({ startTime, endTime: null, hoursWorked: null }) // Clear previous session data
         .where(
           and(
             eq(attendanceRecords.userId, ctx.user.id),

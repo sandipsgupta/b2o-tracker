@@ -109,15 +109,20 @@
 - [x] Add Planned Days counter display below "Days remaining"
 - [x] Implement time tracking counter (start/stop/auto-end after 8 hours)
 - [x] Integrate TimeTracker into AttendanceCalendar status modal
-- [x] Display hours in "Hours Today" card on dashboard
+- [x] Display hours in "Hours Today" card on dashboard (always visible)
 - [x] Improve live time display (derive from startTime, update every second)
 - [x] Add server-side validation (office status only, clear startTime after stop)
+- [x] Fix startTracking to clear endTime/hoursWorked so sessions can restart cleanly
+- [x] Fix Dashboard Hours Today card to show live elapsed time via useEffect interval
+- [x] Fix TimeTracker to not auto-close modal on stop (let user see final time)
+- [x] Apply missing DB migrations (endTime, hoursWorked columns)
 - [x] Add comprehensive vitest tests for time tracking (10 tests)
-- [ ] Add auto-WFH assignment at end of week (Sunday night)
-- [ ] Implement browser push notifications with optional phone number in profile
-- [ ] Debug and fix WFH graph display issue
+- [x] All 58 tests passing, TypeScript clean
+- [ ] Add auto-WFH assignment at end of week (Sunday night) - DEFERRED
+- [ ] Implement browser push notifications - DEFERRED
+- [ ] Debug and fix WFH graph display issue - DEFERRED
 - [x] Test all features in preview mode
-- [x] Save checkpoint for Phase 11 enhancements (partial)
+- [x] Save checkpoint and ready to publish
 
 
 ## Phase 12: Auto-WFH Assignment & Notifications
@@ -131,3 +136,15 @@
 - [ ] Implement browser push notifications with optional phone number in profile
 - [ ] Add notification permission request UI
 - [ ] Test push notification delivery
+
+
+## Phase 13: Browser Push Notifications
+- [x] Create push notification subscription table (push_subscriptions)
+- [x] Create push notification subscription endpoints (tRPC)
+- [x] Add push notification service worker (sw.js)
+- [x] Implement browser notification permission request UI (usePushNotifications hook)
+- [x] Create NotificationSettings component for user settings
+- [x] Add subscription management (subscribe/unsubscribe/isEnabled)
+- [ ] Add VAPID key configuration
+- [ ] Implement server-side push sending (for auto-WFH notifications)
+- [ ] Test push notifications with sample events
