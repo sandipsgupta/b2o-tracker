@@ -12,9 +12,9 @@ export default function WeeklyChart({ stats }: WeeklyChartProps) {
   const data = [
     {
       name: "This Week",
-      "Office Days": stats.officeAttendedDays,
-      "WFH Days": stats.wfhDays,
-      "Not Logged": Math.max(0, stats.totalWorkingDays - stats.officeAttendedDays - stats.wfhDays),
+      "Office Days": parseInt(String(stats.officeAttendedDays), 10),
+      "WFH Days": parseInt(String(stats.wfhDays), 10),
+      "Not Logged": Math.max(0, parseInt(String(stats.totalWorkingDays), 10) - parseInt(String(stats.officeAttendedDays), 10) - parseInt(String(stats.wfhDays), 10)),
     },
   ];
 
