@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getTodayLocalDateString, isFutureDate, localDateToString } from "@/lib/timezone";
+import TimeTracker from "./TimeTracker";
 
 interface AttendanceRecord {
   date: string;
@@ -222,6 +223,12 @@ export default function AttendanceCalendar({
                 </button>
               ))}
             </div>
+
+            {getRecordStatus(selectedDate) === "office" && (
+              <div className="mt-4 pt-4 border-t">
+                <TimeTracker date={selectedDate} onHoursSaved={() => {}} />
+              </div>
+            )}
 
             <div className="mt-4 pt-4 border-t space-y-2">
               {getRecordStatus(selectedDate) && (

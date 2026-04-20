@@ -4,6 +4,7 @@ interface RemainingDaysCounterProps {
   stats: {
     remainingDaysNeeded: number;
     officeAttendedDays: number;
+    plannedDays: number;
     targetPercentage: number;
   };
 }
@@ -40,6 +41,12 @@ export default function RemainingDaysCounter({ stats }: RemainingDaysCounterProp
           <span className="text-sm text-muted-foreground">Days remaining</span>
           <span className="font-semibold text-amber-600">{stats.remainingDaysNeeded}</span>
         </div>
+        {stats.plannedDays > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Planned days</span>
+            <span className="font-semibold text-blue-600">{stats.plannedDays}</span>
+          </div>
+        )}
       </div>
     </div>
   );

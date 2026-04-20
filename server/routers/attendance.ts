@@ -51,11 +51,12 @@ export const attendanceRouter = router({
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const isPast = input.date < todayStr;
 
-      // Validation: planned and holiday can only be set on today or future dates
-      if ((input.status === "planned" || input.status === "holiday") && isPast) {
+      // Validation: planned can only be set on today or future dates
+      // Holiday can be set on any date (retroactive time-off)
+      if (input.status === "planned" && isPast) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Cannot mark past dates as ${input.status}`,
+          message: "Cannot mark past dates as planned",
         });
       }
 

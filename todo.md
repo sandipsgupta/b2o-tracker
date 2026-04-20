@@ -103,3 +103,13 @@
 - [x] Add debug logging to trace record fetching
 - [x] Fix critical bug: upsertAttendanceRecord creating duplicates instead of updating
 - [x] Test with actual user data to verify fix
+
+## Phase 11: Major Enhancements - Planned Days & Time Tracking
+- [x] Fix holiday update bug for past dates (April 1 not updating to Holiday)
+- [x] Add Planned Days counter display below "Days remaining"
+- [x] Implement time tracking counter (start/stop/auto-end after 8 hours)
+- [ ] Add auto-WFH assignment at end of week (Sunday night)
+- [ ] Implement browser push notifications with optional phone number in profile
+- [ ] Debug and fix WFH graph display issue
+- [ ] Test all features in preview mode
+- [ ] Save checkpoint for Phase 11 enhancements
