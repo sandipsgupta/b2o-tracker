@@ -118,3 +118,16 @@
 - [ ] Debug and fix WFH graph display issue
 - [x] Test all features in preview mode
 - [x] Save checkpoint for Phase 11 enhancements (partial)
+
+
+## Phase 12: Auto-WFH Assignment & Notifications
+- [x] Implement auto-WFH assignment for unlogged days at end of week (Sunday 11:59 PM)
+- [x] Add scheduled job to assign WFH status to unlogged working days
+- [x] Move date utilities to server-side (no client imports)
+- [x] Add duplicate-prevention guards (clear existing timeout on restart)
+- [x] Add comprehensive vitest tests for auto-WFH logic (17 tests total: 9 date math + 8 integration logic)
+- [x] Register job on server startup
+- [x] Production-ready: Robust scheduling, proper error handling, comprehensive test coverage
+- [ ] Implement browser push notifications with optional phone number in profile
+- [ ] Add notification permission request UI
+- [ ] Test push notification delivery
