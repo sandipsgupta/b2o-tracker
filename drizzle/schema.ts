@@ -35,9 +35,6 @@ export const attendanceRecords = mysqlTable("attendance_records", {
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
   status: mysqlEnum("status", ["office", "wfh", "planned", "holiday", "time-off"]).notNull(),
-  startTime: varchar("startTime", { length: 30 }), // ISO string when user started work
-  endTime: varchar("endTime", { length: 30 }), // ISO string when user ended work
-  hoursWorked: int("hoursWorked"), // Total hours worked (stored as minutes)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

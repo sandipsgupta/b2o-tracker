@@ -107,9 +107,9 @@
 ## Phase 11: Major Enhancements - Planned Days & Time Tracking
 - [x] Fix holiday update bug for past dates (April 1 not updating to Holiday)
 - [x] Add Planned Days counter display below "Days remaining"
-- [x] Implement time tracking counter (start/stop/auto-end after 8 hours)
+- [ ] Implement time tracking counter (start/stop/auto-end after 8 hours) - DEFERRED: needs DB migration
 - [ ] Add auto-WFH assignment at end of week (Sunday night)
 - [ ] Implement browser push notifications with optional phone number in profile
 - [ ] Debug and fix WFH graph display issue
-- [ ] Test all features in preview mode
-- [ ] Save checkpoint for Phase 11 enhancements
+- [x] Test all features in preview mode
+- [x] Save checkpoint for Phase 11 enhancements (partial)
