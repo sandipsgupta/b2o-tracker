@@ -44,6 +44,7 @@ export default function AttendanceCalendar({
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [locationSaved, setLocationSaved] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -93,23 +94,27 @@ export default function AttendanceCalendar({
     const existing = getRecord(dateStr);
     setSelectedLocation(existing?.location ?? "");
     setLocationSaved(false);
+    setPendingStatus(null);
     setShowStatusMenu(true);
   };
 
   const handleStatusSelect = (status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
     if (selectedDate) {
-      // Only pass location for office/wfh statuses
-      const loc = (status === "office" || status === "wfh") ? selectedLocation || undefined : undefined;
+      // Track pending status so location dropdown appears immediately for office
+      setPendingStatus(status);
+      // Only pass location for office status
+      const loc = status === "office" ? selectedLocation || undefined : undefined;
       onDateSelect(selectedDate, status, loc);
-      setShowStatusMenu(false);
+      // Do NOT auto-close — let user close manually
     }
   };
 
   const handleSaveLocation = () => {
     if (selectedDate) {
       const existingStatus = getRecordStatus(selectedDate);
-      if (existingStatus === "office" || existingStatus === "wfh") {
-        onDateSelect(selectedDate, existingStatus, selectedLocation || undefined);
+      const effectiveStatus = existingStatus === "office" ? "office" : (pendingStatus === "office" ? "office" : null);
+      if (effectiveStatus === "office") {
+        onDateSelect(selectedDate, "office", selectedLocation || undefined);
         setLocationSaved(true);
         // Reset saved indicator after 2 seconds
         setTimeout(() => setLocationSaved(false), 2000);
@@ -238,7 +243,8 @@ export default function AttendanceCalendar({
               </div>
             )}
 
-            {/* Location dropdown — shown for office/wfh statuses */}
+            {/* Location dropdown — shown ONLY when status is Office Day (existing or just selected) */}
+            {(getRecordStatus(selectedDate!) === "office" || pendingStatus === "office") && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Office Location <span className="text-gray-400 font-normal">(optional)</span>
@@ -254,8 +260,8 @@ export default function AttendanceCalendar({
                     <option key={loc} value={loc}>{loc}</option>
                   ))}
                 </select>
-                {/* Show Save Location button when record already has a status */}
-                {(getRecordStatus(selectedDate!) === "office" || getRecordStatus(selectedDate!) === "wfh") && (
+                {/* Show Save Location button when record has office status (existing or pending) */}
+                {(getRecordStatus(selectedDate!) === "office" || pendingStatus === "office") && (
                   <button
                     onClick={handleSaveLocation}
                     disabled={isLoading}
@@ -270,6 +276,7 @@ export default function AttendanceCalendar({
                 )}
               </div>
             </div>
+            )}
 
             {/* Status buttons */}
             <div className="space-y-2">

@@ -194,3 +194,10 @@
 - [x] Write vitest tests for sphere procedures (7 tests - test isolation issue noted, not a feature bug)
 - [x] All 64 existing tests passing, TypeScript clean
 - [x] Save checkpoint
+
+## Phase 19: Modal & Location UX Fixes
+- [x] Modal should NOT auto-close after status selection — stay open until user manually closes
+- [x] Location dropdown only visible when status is "Office Day" (not WFH/Planned/Holiday/Time Off)
+- [x] Location dropdown also appears immediately when user clicks "Office Day" on an unlogged date (pendingStatus)
+- [x] Save button uses pendingStatus as fallback for newly selected office days
+- [x] 72 tests passing
