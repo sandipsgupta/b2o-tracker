@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import SharedDashboard from "./pages/SharedDashboard";
 import Sphere from "./pages/Sphere";
 import SphereView from "./pages/SphereView";
+import { getLoginUrl } from "./const";
 
 function Router() {
   const { isAuthenticated, loading } = useAuth();
@@ -20,6 +21,15 @@ function Router() {
     return null; // Let the auth check complete
   }
 
+  // Redirect unauthenticated users to login when they try to access protected routes
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isAuthenticated) {
+      window.location.href = getLoginUrl();
+      return null;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <Switch>
       {/* Public routes */}
@@ -27,30 +37,34 @@ function Router() {
       <Route path="/share/:token" component={SharedDashboard} />
       
       {/* Protected routes */}
-      {isAuthenticated && (
-        <>
-          <Route path="/dashboard">
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
-          </Route>
-          <Route path="/settings">
-            <DashboardLayout>
-              <Settings />
-            </DashboardLayout>
-          </Route>
-          <Route path="/sphere">
-            <DashboardLayout>
-              <Sphere />
-            </DashboardLayout>
-          </Route>
-          <Route path="/sphere/:id">
-            <DashboardLayout>
-              <SphereView />
-            </DashboardLayout>
-          </Route>
-        </>
-      )}
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Dashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Settings />
+          </DashboardLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/sphere">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Sphere />
+          </DashboardLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/sphere/:id">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <SphereView />
+          </DashboardLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

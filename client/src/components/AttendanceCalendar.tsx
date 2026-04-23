@@ -103,6 +103,16 @@ export default function AttendanceCalendar({
     }
   };
 
+  const handleSaveLocation = () => {
+    if (selectedDate) {
+      const existingStatus = getRecordStatus(selectedDate);
+      if (existingStatus === "office" || existingStatus === "wfh") {
+        onDateSelect(selectedDate, existingStatus, selectedLocation || undefined);
+        setShowStatusMenu(false);
+      }
+    }
+  };
+
   const handleDeleteRecord = () => {
     if (selectedDate && onDateDelete) {
       onDateDelete(selectedDate);
@@ -228,16 +238,27 @@ export default function AttendanceCalendar({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Office Location <span className="text-gray-400 font-normal">(optional)</span>
               </label>
-              <select
-                value={selectedLocation}
-                onChange={e => setSelectedLocation(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">— Select location —</option>
-                {OFFICE_LOCATIONS.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={selectedLocation}
+                  onChange={e => setSelectedLocation(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">— Select location —</option>
+                  {OFFICE_LOCATIONS.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+                {/* Show Save Location button when record already has a status */}
+                {(getRecordStatus(selectedDate!) === "office" || getRecordStatus(selectedDate!) === "wfh") && (
+                  <button
+                    onClick={handleSaveLocation}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Status buttons */}
