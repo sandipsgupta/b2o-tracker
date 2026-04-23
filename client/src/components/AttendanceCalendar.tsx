@@ -43,6 +43,7 @@ export default function AttendanceCalendar({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [locationSaved, setLocationSaved] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -91,6 +92,7 @@ export default function AttendanceCalendar({
     // Pre-fill location from existing record
     const existing = getRecord(dateStr);
     setSelectedLocation(existing?.location ?? "");
+    setLocationSaved(false);
     setShowStatusMenu(true);
   };
 
@@ -108,7 +110,10 @@ export default function AttendanceCalendar({
       const existingStatus = getRecordStatus(selectedDate);
       if (existingStatus === "office" || existingStatus === "wfh") {
         onDateSelect(selectedDate, existingStatus, selectedLocation || undefined);
-        setShowStatusMenu(false);
+        setLocationSaved(true);
+        // Reset saved indicator after 2 seconds
+        setTimeout(() => setLocationSaved(false), 2000);
+        // Do NOT close modal — let user confirm the save
       }
     }
   };
@@ -253,9 +258,14 @@ export default function AttendanceCalendar({
                 {(getRecordStatus(selectedDate!) === "office" || getRecordStatus(selectedDate!) === "wfh") && (
                   <button
                     onClick={handleSaveLocation}
-                    className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    disabled={isLoading}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                      locationSaved
+                        ? "bg-green-600 text-white"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   >
-                    Save
+                    {locationSaved ? "✓ Saved" : "Save"}
                   </button>
                 )}
               </div>
