@@ -1,0 +1,1 @@
+ALTER TABLE `attendance_records` ADD `location` varchar(100);

@@ -8,16 +8,30 @@ import { TimeTracker } from "./TimeTracker";
 interface AttendanceRecord {
   date: string;
   status: "office" | "wfh" | "planned" | "holiday" | "time-off";
+  location?: string | null;
 }
 
 interface AttendanceCalendarProps {
   records: AttendanceRecord[];
-  onDateSelect: (date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off") => void;
+  onDateSelect: (date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off", location?: string) => void;
   onDateDelete?: (date: string) => void;
   isLoading?: boolean;
 }
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const OFFICE_LOCATIONS = [
+  "Minneapolis Plaza",
+  "Hopkins, MN",
+  "Irwing, TX",
+  "Atlanta",
+  "Cincinati",
+  "Bay Area",
+  "New York",
+  "New Jersey",
+  "Charlotte, NC",
+  "Columbia Center, OR",
+];
 
 export default function AttendanceCalendar({
   records,
@@ -28,6 +42,7 @@ export default function AttendanceCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -60,9 +75,8 @@ export default function AttendanceCalendar({
     calendarDays.push({ date: i, isCurrentMonth: false, dateStr });
   }
 
-  const getRecordStatus = (dateStr: string) => {
-    return records.find(r => r.date === dateStr)?.status;
-  };
+  const getRecord = (dateStr: string) => records.find(r => r.date === dateStr);
+  const getRecordStatus = (dateStr: string) => getRecord(dateStr)?.status;
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(year, month - 1));
@@ -74,12 +88,17 @@ export default function AttendanceCalendar({
 
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
+    // Pre-fill location from existing record
+    const existing = getRecord(dateStr);
+    setSelectedLocation(existing?.location ?? "");
     setShowStatusMenu(true);
   };
 
   const handleStatusSelect = (status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
     if (selectedDate) {
-      onDateSelect(selectedDate, status);
+      // Only pass location for office/wfh statuses
+      const loc = (status === "office" || status === "wfh") ? selectedLocation || undefined : undefined;
+      onDateSelect(selectedDate, status, loc);
       setShowStatusMenu(false);
     }
   };
@@ -110,35 +129,23 @@ export default function AttendanceCalendar({
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
-      case "office":
-        return "🏢";
-      case "wfh":
-        return "🏠";
-      case "planned":
-        return "📅";
-      case "holiday":
-        return "🎉";
-      case "time-off":
-        return "🌴";
-      default:
-        return "";
+      case "office": return "🏢";
+      case "wfh": return "🏠";
+      case "planned": return "📅";
+      case "holiday": return "🎉";
+      case "time-off": return "🌴";
+      default: return "";
     }
   };
 
   const getStatusLabel = (status?: string) => {
     switch (status) {
-      case "office":
-        return "Office Day";
-      case "wfh":
-        return "WFH";
-      case "planned":
-        return "Planned";
-      case "holiday":
-        return "Holiday";
-      case "time-off":
-        return "Time Off";
-      default:
-        return "";
+      case "office": return "Office Day";
+      case "wfh": return "WFH";
+      case "planned": return "Planned";
+      case "holiday": return "Holiday";
+      case "time-off": return "Time Off";
+      default: return "";
     }
   };
 
@@ -172,8 +179,6 @@ export default function AttendanceCalendar({
         {calendarDays.map((day, idx) => {
           const status = getRecordStatus(day.dateStr);
           const isToday = day.dateStr === getTodayLocalDateString();
-          const isFuture = isFutureDate(day.dateStr);
-          // Allow editing past dates (office/wfh) and today/future dates (planned/holiday)
           const isEditable = day.isCurrentMonth;
 
           return (
@@ -199,7 +204,7 @@ export default function AttendanceCalendar({
         })}
       </div>
 
-      {/* Status Menu */}
+      {/* Status Menu Modal */}
       {showStatusMenu && selectedDate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -211,13 +216,31 @@ export default function AttendanceCalendar({
               })}
             </h4>
 
-            {/* Show TimeTracker only when Office status is selected */}
+            {/* Show TimeTracker only when Office status is selected for today */}
             {getRecordStatus(selectedDate) === "office" && selectedDate === getTodayLocalDateString() && (
               <div className="mb-4">
                 <TimeTracker date={selectedDate} onClose={() => setShowStatusMenu(false)} />
               </div>
             )}
 
+            {/* Location dropdown — shown for office/wfh statuses */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Office Location <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <select
+                value={selectedLocation}
+                onChange={e => setSelectedLocation(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">— Select location —</option>
+                {OFFICE_LOCATIONS.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status buttons */}
             <div className="space-y-2">
               {(["office", "wfh", "planned", "holiday", "time-off"] as const).map(status => (
                 <button

@@ -43,6 +43,7 @@ export const attendanceRouter = router({
       z.object({
         date: z.string(),
         status: z.enum(["office", "wfh", "planned", "holiday", "time-off"]),
+        location: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -60,7 +61,7 @@ export const attendanceRouter = router({
         });
       }
 
-      const result = await upsertAttendanceRecord(ctx.user.id, input.date, input.status);
+      const result = await upsertAttendanceRecord(ctx.user.id, input.date, input.status, input.location);
       return result;
     }),
 

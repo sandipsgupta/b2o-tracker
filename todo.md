@@ -163,3 +163,20 @@
 - [x] WFH graph still works correctly
 - [x] 64 tests passing
 - [x] Save checkpoint
+
+## Phase 16: Fix Chart to Show Monthly Totals
+- [ ] Change "This Week" chart to use monthly stats (officeAttendedDays, wfhDays, totalWorkingDays from getMonthlyStats)
+- [ ] Rename section title to "This Month" and update subtitle to show month totals
+- [ ] Verify chart shows correct values matching the calendar
+- [ ] Save checkpoint
+
+## Phase 17: Monthly Hours Report & Location Dropdown
+- [x] Add location column to attendance_records table (DB migration applied)
+- [x] Update logAttendance tRPC procedure to accept and save location
+- [x] Add location dropdown in status modal (10 hardcoded locations, pre-fills from existing record)
+- [x] Save selected location per date to DB (preserved on status updates)
+- [x] Build monthly hours report: table with date, location, hours worked per office day
+- [x] Show total hours row at bottom of report
+- [x] Monthly chart now uses monthly stats (11 office, 4 WFH, correct values)
+- [x] 64 tests passing
+- [x] Save checkpoint

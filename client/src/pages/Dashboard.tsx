@@ -130,10 +130,11 @@ export default function Dashboard() {
               <AttendanceCalendar
                 records={attendanceRecords.data?.map(r => ({
                   date: r.date,
-                  status: r.status as "office" | "wfh" | "planned" | "holiday" | "time-off"
+                  status: r.status as "office" | "wfh" | "planned" | "holiday" | "time-off",
+                  location: r.location,
                 })) || []}
-                onDateSelect={(date, status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
-                  logAttendance.mutate({ date, status });
+                onDateSelect={(date, status: "office" | "wfh" | "planned" | "holiday" | "time-off", location?: string) => {
+                  logAttendance.mutate({ date, status, location });
                 }}
                 onDateDelete={(date) => {
                   deleteAttendance.mutate({ date });
@@ -144,17 +145,17 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Weekly Chart */}
-          {weeklyStats.data && (
+          {/* Monthly Attendance Chart */}
+          {monthlyStats.data && (
             <Card>
               <CardHeader>
-                <CardTitle>This Week</CardTitle>
+                <CardTitle>This Month</CardTitle>
                 <CardDescription>
-                  {weeklyStats.data.officeAttendedDays} of {weeklyStats.data.totalWorkingDays} working days
+                  {monthlyStats.data.officeAttendedDays} office &amp; {monthlyStats.data.wfhDays} WFH of {monthlyStats.data.totalWorkingDays} working days
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <WeeklyChart stats={weeklyStats.data} />
+                <WeeklyChart stats={monthlyStats.data} />
               </CardContent>
             </Card>
           )}
@@ -168,6 +169,75 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <TrendChart data={trendData.data} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Monthly Hours Report */}
+          {attendanceRecords.data && attendanceRecords.data.some(r => r.status === "office") && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Hours Report</CardTitle>
+                <CardDescription>
+                  Time logged per office day this month
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="pb-2 pr-4 font-medium">Date</th>
+                        <th className="pb-2 pr-4 font-medium">Location</th>
+                        <th className="pb-2 font-medium text-right">Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {attendanceRecords.data
+                        .filter(r => r.status === "office")
+                        .sort((a, b) => a.date.localeCompare(b.date))
+                        .map(r => {
+                          const mins = r.hoursWorked ?? 0;
+                          const h = Math.floor(mins / 60);
+                          const m = mins % 60;
+                          const hoursDisplay = mins > 0 ? `${h}h ${m}m` : "—";
+                          return (
+                            <tr key={r.date} className="hover:bg-muted/30 transition-colors">
+                              <td className="py-2 pr-4 font-medium">
+                                {new Date(r.date + "T00:00:00").toLocaleDateString("en-US", {
+                                  weekday: "short", month: "short", day: "numeric"
+                                })}
+                              </td>
+                              <td className="py-2 pr-4 text-muted-foreground">
+                                {r.location ?? <span className="italic text-gray-400">No location</span>}
+                              </td>
+                              <td className="py-2 text-right font-mono font-semibold">
+                                <span className={mins > 0 ? "text-blue-600" : "text-gray-400"}>
+                                  {hoursDisplay}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t font-semibold">
+                        <td className="pt-2 pr-4">Total</td>
+                        <td className="pt-2 pr-4"></td>
+                        <td className="pt-2 text-right font-mono text-blue-600">
+                          {(() => {
+                            const totalMins = attendanceRecords.data
+                              .filter(r => r.status === "office")
+                              .reduce((sum, r) => sum + (r.hoursWorked ?? 0), 0);
+                            const h = Math.floor(totalMins / 60);
+                            const m = totalMins % 60;
+                            return totalMins > 0 ? `${h}h ${m}m` : "—";
+                          })()}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </CardContent>
             </Card>
           )}

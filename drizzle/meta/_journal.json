@@ -43,6 +43,13 @@
       "when": 1776660136827,
       "tag": "0005_demonic_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776917398099,
+      "tag": "0006_solid_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

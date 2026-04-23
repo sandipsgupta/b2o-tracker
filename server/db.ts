@@ -144,7 +144,7 @@ export async function getAttendanceRecords(userId: number, startDate: string, en
 /**
  * Upsert attendance record for a specific date
  */
-export async function upsertAttendanceRecord(userId: number, date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off") {
+export async function upsertAttendanceRecord(userId: number, date: string, status: "office" | "wfh" | "planned" | "holiday" | "time-off", location?: string) {
   const db = await getDb();
   if (!db) return null;
 
@@ -155,13 +155,15 @@ export async function upsertAttendanceRecord(userId: number, date: string, statu
       .limit(1);
 
     if (existing.length > 0) {
-      // UPDATE only the status — preserve startTime, endTime, hoursWorked so tracked hours are not lost
+      // UPDATE status and location — preserve startTime, endTime, hoursWorked so tracked hours are not lost
+      const updateData: Record<string, unknown> = { status };
+      if (location !== undefined) updateData.location = location;
       await db.update(attendanceRecords)
-        .set({ status })
+        .set(updateData)
         .where(and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, date)));
     } else {
       // INSERT new record
-      await db.insert(attendanceRecords).values({ userId, date, status });
+      await db.insert(attendanceRecords).values({ userId, date, status, location });
     }
 
     // Return the updated/inserted record

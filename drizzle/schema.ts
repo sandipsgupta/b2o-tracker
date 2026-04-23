@@ -38,6 +38,7 @@ export const attendanceRecords = mysqlTable("attendance_records", {
   startTime: varchar("startTime", { length: 30 }), // ISO 8601 timestamp when work started
   endTime: varchar("endTime", { length: 30 }), // ISO 8601 timestamp when work ended
   hoursWorked: int("hoursWorked"), // Total minutes worked
+  location: varchar("location", { length: 100 }), // Office location
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
