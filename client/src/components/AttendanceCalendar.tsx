@@ -237,7 +237,7 @@ export default function AttendanceCalendar({
             </h4>
 
             {/* Show TimeTracker only when Office status is selected for today */}
-            {getRecordStatus(selectedDate) === "office" && selectedDate === getTodayLocalDateString() && (
+            {(getRecordStatus(selectedDate) === "office" || pendingStatus === "office") && selectedDate === getTodayLocalDateString() && (
               <div className="mb-4">
                 <TimeTracker date={selectedDate} onClose={() => setShowStatusMenu(false)} />
               </div>
