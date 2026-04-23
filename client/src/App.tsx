@@ -10,6 +10,8 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import SharedDashboard from "./pages/SharedDashboard";
+import Sphere from "./pages/Sphere";
+import SphereView from "./pages/SphereView";
 
 function Router() {
   const { isAuthenticated, loading } = useAuth();
@@ -35,6 +37,16 @@ function Router() {
           <Route path="/settings">
             <DashboardLayout>
               <Settings />
+            </DashboardLayout>
+          </Route>
+          <Route path="/sphere">
+            <DashboardLayout>
+              <Sphere />
+            </DashboardLayout>
+          </Route>
+          <Route path="/sphere/:id">
+            <DashboardLayout>
+              <SphereView />
             </DashboardLayout>
           </Route>
         </>

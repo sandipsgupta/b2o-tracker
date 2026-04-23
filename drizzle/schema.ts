@@ -88,3 +88,30 @@ export const pushSubscriptions = mysqlTable("push_subscriptions", {
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+/**
+ * Spheres: collaborative groups for location visibility
+ */
+export const spheres = mysqlTable("spheres", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 32 }).notNull().unique(), // Invite code
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Sphere = typeof spheres.$inferSelect;
+export type InsertSphere = typeof spheres.$inferInsert;
+
+/**
+ * Sphere members: users in a sphere
+ */
+export const sphereMembers = mysqlTable("sphere_members", {
+  id: int("id").autoincrement().primaryKey(),
+  sphereId: int("sphereId").notNull().references(() => spheres.id, { onDelete: "cascade" }),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type SphereMember = typeof sphereMembers.$inferSelect;
+export type InsertSphereMember = typeof sphereMembers.$inferInsert;
