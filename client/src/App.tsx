@@ -14,21 +14,29 @@ import Sphere from "./pages/Sphere";
 import SphereView from "./pages/SphereView";
 import { getLoginUrl } from "./const";
 
-function Router() {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return null; // Let the auth check complete
+// ProtectedRoute MUST be defined outside of Router to avoid remounting on every Router re-render.
+// Defining a component inside another component creates a new component type on every render,
+// which causes React to unmount and remount the entire subtree, destroying all state.
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading, user } = useAuth();
+  // Wait for initial auth check before redirecting
+  if (loading && !user) return null;
+  if (!isAuthenticated) {
+    window.location.href = getLoginUrl();
+    return null;
   }
+  return <>{children}</>;
+}
 
-  // Redirect unauthenticated users to login when they try to access protected routes
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return null;
-    }
-    return <>{children}</>;
-  };
+function Router() {
+  const { loading, user } = useAuth();
+
+  // Only block rendering on the very first auth check (no user data yet).
+  // Do NOT return null during subsequent auth.me refetches — that would
+  // unmount the entire route tree and destroy all component state (e.g., open modals).
+  if (loading && !user) {
+    return null; // Let the initial auth check complete
+  }
 
   return (
     <Switch>

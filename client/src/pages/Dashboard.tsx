@@ -11,9 +11,32 @@ import MonthlyProgress from "@/components/MonthlyProgress";
 import RemainingDaysCounter from "@/components/RemainingDaysCounter";
 import TrendChart from "@/components/TrendChart";
 import AIInsights from "@/components/AIInsights";
+import { TimeTracker } from "@/components/TimeTracker";
+
+const OFFICE_LOCATIONS = [
+  "Minneapolis Plaza",
+  "Hopkins, MN",
+  "Irwing, TX",
+  "Atlanta",
+  "Cincinati",
+  "Bay Area",
+  "New York",
+  "New Jersey",
+  "Charlotte, NC",
+  "Columbia Center, OR",
+];
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
+
+  // ── Modal state lifted to Dashboard level ──────────────────────────────────
+  // This ensures the modal survives any re-renders or remounts of AttendanceCalendar.
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [locationSaved, setLocationSaved] = useState(false);
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Fetch data
   const weeklyStats = trpc.attendance.getWeeklyStats.useQuery();
@@ -50,6 +73,7 @@ export default function Dashboard() {
       monthlyStats.refetch();
       trendData.refetch();
       attendanceRecords.refetch();
+      setShowStatusMenu(false);
     },
     onError: (error) => {
       console.error("Failed to delete attendance:", error);
@@ -93,15 +117,88 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [timeTrackingStatus.data]);
 
-  const isLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
+  // Only show full-page spinner on initial load, NOT on refetches.
+  const isInitialLoading = weeklyStats.isLoading || monthlyStats.isLoading || trendData.isLoading || attendanceRecords.isLoading;
 
-  if (isLoading) {
+  // DEBUG: log state changes
+  console.log('[Dashboard] isInitialLoading:', isInitialLoading, 'showStatusMenu:', showStatusMenu,
+    'weekly.isLoading:', weeklyStats.isLoading, 'monthly.isLoading:', monthlyStats.isLoading,
+    'trend.isLoading:', trendData.isLoading, 'records.isLoading:', attendanceRecords.isLoading);
+
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  // ── Modal helpers ──────────────────────────────────────────────────────────
+  const getRecord = (dateStr: string) =>
+    attendanceRecords.data?.find(r => r.date === dateStr);
+  const getRecordStatus = (dateStr: string) => getRecord(dateStr)?.status;
+
+  const handleDateClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    const existing = getRecord(dateStr);
+    setSelectedLocation(existing?.location ?? "");
+    setLocationSaved(false);
+    setPendingStatus(null);
+    setShowStatusMenu(true);
+  };
+
+  const handleStatusSelect = (status: "office" | "wfh" | "planned" | "holiday" | "time-off") => {
+    if (selectedDate) {
+      setPendingStatus(status);
+      const loc = status === "office" ? selectedLocation || undefined : undefined;
+      logAttendance.mutate({ date: selectedDate, status, location: loc });
+      // Do NOT auto-close — let user close manually
+    }
+  };
+
+  const handleSaveLocation = () => {
+    if (selectedDate) {
+      const existingStatus = getRecordStatus(selectedDate);
+      const effectiveStatus = existingStatus === "office" ? "office" : (pendingStatus === "office" ? "office" : null);
+      if (effectiveStatus === "office") {
+        logAttendance.mutate({ date: selectedDate, status: "office", location: selectedLocation || undefined });
+        setLocationSaved(true);
+        setTimeout(() => setLocationSaved(false), 2000);
+      }
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (selectedDate) {
+      deleteAttendance.mutate({ date: selectedDate });
+      // setShowStatusMenu(false) is called in deleteAttendance.onSuccess
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "office": return "🏢";
+      case "wfh": return "🏠";
+      case "planned": return "📅";
+      case "holiday": return "🎉";
+      case "time-off": return "🌴";
+      default: return "";
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case "office": return "Office Day";
+      case "wfh": return "WFH";
+      case "planned": return "Planned";
+      case "holiday": return "Holiday";
+      case "time-off": return "Time Off";
+      default: return "";
+    }
+  };
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const isModalLoading = logAttendance.isPending || deleteAttendance.isPending;
 
   return (
     <div className="space-y-6">
@@ -133,13 +230,7 @@ export default function Dashboard() {
                   status: r.status as "office" | "wfh" | "planned" | "holiday" | "time-off",
                   location: r.location,
                 })) || []}
-                onDateSelect={(date, status: "office" | "wfh" | "planned" | "holiday" | "time-off", location?: string) => {
-                  logAttendance.mutate({ date, status, location });
-                }}
-                onDateDelete={(date) => {
-                  deleteAttendance.mutate({ date });
-                }}
-                isLoading={logAttendance.isPending || deleteAttendance.isPending}
+                onDateClick={handleDateClick}
               />
               <p className="text-xs text-muted-foreground mt-3">💡 You can edit today and future dates in the current month to plan ahead. Mark days as Planned or Holiday to forecast your attendance.</p>
             </CardContent>
@@ -306,6 +397,93 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Status Modal — rendered at Dashboard level so it survives calendar re-renders ── */}
+      {showStatusMenu && selectedDate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h4 className="text-lg font-semibold mb-4">
+              {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })}
+            </h4>
+
+            {/* Show TimeTracker only when Office status is selected for today */}
+            {(getRecordStatus(selectedDate) === "office" || pendingStatus === "office") && selectedDate === today && (
+              <div className="mb-4">
+                <TimeTracker date={selectedDate} onClose={() => setShowStatusMenu(false)} />
+              </div>
+            )}
+
+            {/* Location dropdown — shown ONLY when status is Office Day (existing or just selected) */}
+            {(getRecordStatus(selectedDate) === "office" || pendingStatus === "office") && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Office Location <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">— Select location —</option>
+                    {OFFICE_LOCATIONS.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleSaveLocation}
+                    disabled={isModalLoading}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                      locationSaved
+                        ? "bg-green-600 text-white"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                  >
+                    {locationSaved ? "✓ Saved" : "Save"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Status buttons */}
+            <div className="space-y-2">
+              {(["office", "wfh", "planned", "holiday", "time-off"] as const).map(status => (
+                <button
+                  key={status}
+                  onClick={() => handleStatusSelect(status)}
+                  disabled={isModalLoading}
+                  className="w-full p-3 text-left rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50"
+                >
+                  <span className="text-lg mr-2">{getStatusIcon(status)}</span>
+                  <span className="font-medium">{getStatusLabel(status)}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-4 border-t space-y-2">
+              {getRecordStatus(selectedDate) && (
+                <button
+                  onClick={handleDeleteRecord}
+                  disabled={isModalLoading}
+                  className="w-full p-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-all disabled:opacity-50"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setShowStatusMenu(false)}
+                className="w-full p-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

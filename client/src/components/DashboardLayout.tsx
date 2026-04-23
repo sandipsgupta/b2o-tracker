@@ -53,7 +53,10 @@ export default function DashboardLayout({
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
-  if (loading) {
+  // Only show the skeleton on the very first load (no user data yet).
+  // Do NOT unmount children during subsequent auth.me refetches — that would
+  // destroy any open modal state in child components.
+  if (loading && !user) {
     return <DashboardLayoutSkeleton />
   }
 
